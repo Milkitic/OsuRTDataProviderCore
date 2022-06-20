@@ -11,12 +11,13 @@
         public static bool DisableProcessNotFoundInformation = false;
         public static bool EnableModsChangedAtListening = false;
 
-        #region NoSave
+        public static double CurrentOsuVersionValue => Utils.ConvertVersionStringToValue(Variables.OsuVersion);
+    }
+
+    internal static class Variables
+    {
         public static string SongsPath = string.Empty;
         public static string OsuVersion = string.Empty;
         public static string Username = string.Empty;
-        #endregion
-
-        public static double CurrentOsuVersionValue => Utils.ConvertVersionStringToValue(OsuVersion);
     }
 }

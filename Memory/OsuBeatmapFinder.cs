@@ -76,7 +76,7 @@ namespace OsuRTDataProvider.Memory
             {
                 if (!(string.IsNullOrWhiteSpace(filename) || string.IsNullOrWhiteSpace(folder)))
                 {
-                    string folder_full = Path.Combine(Setting.SongsPath, folder);
+                    string folder_full = Path.Combine(Variables.SongsPath, folder);
                     string filename_full = Path.Combine(folder_full, filename);
                     using (var fs = File.OpenRead(filename_full))
                     {
@@ -94,7 +94,7 @@ namespace OsuRTDataProvider.Memory
                 if (Setting.DebugMode)
                 {
                     sb.AppendLine("--------------ORTDP(Detail)-----------------");
-                    sb.AppendLine($"Songs Path:{Setting.SongsPath}");
+                    sb.AppendLine($"Songs Path:{Variables.SongsPath}");
                     sb.AppendLine($"Filename:{filename}");
                     sb.AppendLine($"Folder:{folder}");
                     sb.AppendLine($"BeatmapID:{id}");

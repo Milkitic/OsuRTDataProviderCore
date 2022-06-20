@@ -502,7 +502,7 @@ namespace OsuRTDataProvider.Listen
                         {
                             if (Directory.Exists(Setting.ForceOsuSongsDirectory))
                             {
-                                Setting.SongsPath = Setting.ForceOsuSongsDirectory;
+                                Variables.SongsPath = Setting.ForceOsuSongsDirectory;
                             }
                             else
                             {
@@ -510,19 +510,19 @@ namespace OsuRTDataProvider.Listen
                                 Logger.Info($"The ForceOsuSongsDirectory does not exist, try searching for the songs path.");
                                 song_path = line.Split('=')[1].Trim();
                                 if (Path.IsPathRooted(song_path))
-                                    Setting.SongsPath = song_path;
+                                    Variables.SongsPath = song_path;
                                 else
-                                    Setting.SongsPath = Path.Combine(osu_path, song_path);
+                                    Variables.SongsPath = Path.Combine(osu_path, song_path);
                             }
                         }
                         else if (line.StartsWith("Username"))
                         {
-                            Setting.Username = line.Split('=')[1].Trim();
+                            Variables.Username = line.Split('=')[1].Trim();
                         }
                         else if (line.StartsWith("LastVersion")&&!line.StartsWith("LastVersionPermissionsFailed"))
                         {
-                            Setting.OsuVersion = line.Split('=')[1].Trim();
-                            Logger.Info($"OSU Client Verison:{Setting.OsuVersion} ORTDP Version:{OsuRTDataProviderPlugin.VERSION}");
+                            Variables.OsuVersion = line.Split('=')[1].Trim();
+                            Logger.Info($"OSU Client Verison:{Variables.OsuVersion} ORTDP Version:{Utils.GetVersion()}");
                         }
                     }
                 }
@@ -532,13 +532,13 @@ namespace OsuRTDataProvider.Listen
                 Logger.Error($"Exception: {e.ToString()}");
             }
 
-            if (string.IsNullOrWhiteSpace(Setting.SongsPath))
+            if (string.IsNullOrWhiteSpace(Variables.SongsPath))
             {
                 Logger.Warn($"Search failed, use default songs path.");
-                Setting.SongsPath = Path.Combine(osu_path,"Songs");
+                Variables.SongsPath = Path.Combine(osu_path,"Songs");
             }
             Logger.Info($"Osu Path: {osu_path}");
-            Logger.Info($"Beatmap Path: {Setting.SongsPath}");
+            Logger.Info($"Beatmap Path: {Variables.SongsPath}");
         }
         #endregion
 
@@ -637,7 +637,7 @@ namespace OsuRTDataProvider.Listen
                     int score = 0;
                     double hp = 0.0;
                     double acc = 0.0;
-                    string playername = Setting.Username;
+                    string playername = Variables.Username;
 
                     try
                     {
