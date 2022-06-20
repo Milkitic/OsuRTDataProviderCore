@@ -1,25 +1,24 @@
-﻿using Sync.Tools;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
+using System.Reflection;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace OsuRTDataProvider
 {
     public static class Utils
     {
+        private static string _version;
+
         public static double ConvertVersionStringToValue(string osu_version_string)
         {
-            if (double.TryParse(Regex.Match(osu_version_string, @"\d+(\.\d*)?").Value.ToString(),NumberStyles.Float, CultureInfo.InvariantCulture, out var ver))
+            if (double.TryParse(Regex.Match(osu_version_string, @"\d+(\.\d*)?").Value.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var ver))
             {
 
                 return ver;
             }
 
-            throw new Exception("Can't parse version: "+osu_version_string);
+            throw new Exception("Can't parse version: " + osu_version_string);
         }
 
         //https://gist.github.com/peppy/3a11cb58c856b6af7c1916422f668899
@@ -65,21 +64,21 @@ namespace OsuRTDataProvider
             result.Add(min); //6
             return result;
         }
+
+        public static string GetVersion()
+        {
+            if (_version != null) return _version;
+            var ver = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>();
+            _version = ver.InformationalVersion;
+            return _version;
+        }
     }
 
     public static class Logger
     {
-        static Logger<OsuRTDataProviderPlugin> logger=new Logger<OsuRTDataProviderPlugin>();
-
-        public static void Info(string message) => logger.LogInfomation(message);
-
-        public static void Debug(string message)
-        {
-            if (Setting.DebugMode)
-                logger.LogInfomation(message);
-        }
-
-        public static void Error(string message) => logger.LogError(message);
-        public static void Warn(string message) => logger.LogWarning(message);
+        public static void Info(string message) => Console.WriteLine(message);
+        public static void Debug(string message) => Console.WriteLine(message);
+        public static void Error(string message) => Console.Error.WriteLine(message);
+        public static void Warn(string message) => Console.WriteLine(message);
     }
 }
