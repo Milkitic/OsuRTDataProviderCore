@@ -191,7 +191,7 @@ namespace OsuRTDataProvider.Listen
         private int m_last_miss = 0;
         private int m_last_geki = 0;
         private int m_last_katu = 0;
-        
+
 
         private int m_last_score = 0;
 
@@ -210,10 +210,10 @@ namespace OsuRTDataProvider.Listen
             s_stop_flag = false;
 
             //Listen Thread
-            s_listen_task = Task.Run(() =>
+            s_listen_task = Task.Factory.StartNew(() =>
             {
                 Thread.CurrentThread.Name = "OsuRTDataProviderThread";
-                Thread.Sleep(2000);
+                var spinWait = new SpinWait();
                 while (!s_stop_flag)
                 {
                     for (int i = 0; i < s_listen_update_list.Count; i++)
@@ -222,9 +222,16 @@ namespace OsuRTDataProvider.Listen
                         action.Item2();
                     }
 
-                    Thread.Sleep(Setting.ListenInterval);
+                    if (Setting.ListenInterval == 0)
+                    {
+                        spinWait.SpinOnce();
+                    }
+                    else
+                    {
+                        Thread.Sleep(Setting.ListenInterval);
+                    }
                 }
-            });
+            }, TaskCreationOptions.LongRunning);
         }
         #endregion
 
@@ -236,6 +243,7 @@ namespace OsuRTDataProvider.Listen
 
         public void Start()
         {
+            find_osu_process_timer.Start();
             s_listen_update_list.Add(new Tuple<int, Action>(m_osu_id, ListenLoopUpdate));
         }
 
@@ -252,7 +260,7 @@ namespace OsuRTDataProvider.Listen
         }
 
         #region Get Current Data
-        
+
         private bool HasMask(ProvideDataMask mask, ProvideDataMask h)
         {
             return (mask & h) == h;
@@ -395,43 +403,51 @@ namespace OsuRTDataProvider.Listen
         #region Init Finder
         private const long RETRY_INTERVAL = 3000;
 
-        private Dictionary<Type, long> finder_timer_dict = new Dictionary<Type, long>();
+        private Dictionary<Type, Stopwatch> finder_timer_dict = new Dictionary<Type, Stopwatch>();
         private T InitFinder<T>(string success_fmt, string failed_fmt) where T : OsuFinderBase
         {
+            bool firstInit = false;
             if (!finder_timer_dict.ContainsKey(typeof(T)))
-                finder_timer_dict.Add(typeof(T), 0);
+            {
+                finder_timer_dict.Add(typeof(T), new Stopwatch());
+                firstInit = true;
+            }
 
             T finder = null;
-            long timer = finder_timer_dict[typeof(T)];
+            Stopwatch timer = finder_timer_dict[typeof(T)];
 
-            if (timer % RETRY_INTERVAL == 0)
+            if (firstInit || timer.ElapsedMilliseconds >= RETRY_INTERVAL)
             {
                 finder = typeof(T).GetConstructors()[0].Invoke(new object[] { m_osu_process }) as T;
                 if (finder.TryInit())
                 {
-                    timer = 0;
+                    timer.Reset();
                     Logger.Info(string.Format(success_fmt, m_osu_id));
                     return finder;
                 }
 
                 finder = null;
                 Logger.Error(string.Format(failed_fmt, m_osu_id, RETRY_INTERVAL / 1000));
+                timer.Reset();
             }
-            timer += Setting.ListenInterval;
+            timer.Start();
             finder_timer_dict[typeof(T)] = timer;
             return finder;
         }
         #endregion
 
         #region Find Osu Setting
-        private long find_osu_process_timer = 0;
-        private const long FIND_OSU_RETRY_INTERVAL = 5000;
+
+        private bool firstInit = true;
+        private Stopwatch find_osu_process_timer = new Stopwatch();
+        private const long FIND_OSU_RETRY_INTERVAL = 2000;
 
         private void FindOsuProcess()
         {
-            if (find_osu_process_timer > FIND_OSU_RETRY_INTERVAL)
+            if (firstInit || find_osu_process_timer.ElapsedMilliseconds > FIND_OSU_RETRY_INTERVAL)
             {
-                find_osu_process_timer = 0;
+                firstInit = false;
+                find_osu_process_timer.Reset();
                 Process[] process_list;
 
                 process_list = Process.GetProcessesByName("osu!");
@@ -462,24 +478,25 @@ namespace OsuRTDataProvider.Listen
                         return;
                     }
                 }
-                find_osu_process_timer = 0;
+
+                find_osu_process_timer.Reset();
                 if (!Setting.DisableProcessNotFoundInformation)
                     Logger.Error(string.Format(LANG_OSU_NOT_FOUND, m_osu_id));
             }
-            find_osu_process_timer += Setting.ListenInterval;
+            find_osu_process_timer.Start();
         }
 
         private void FindSongPathAndUsername()
         {
             string osu_path = "";
-            find_osu_filename:
+find_osu_filename:
             try
             {
                 osu_path = Path.GetDirectoryName(m_osu_process.MainModule.FileName);
             }
             catch (Win32Exception e)
             {
-                if(Setting.DebugMode)
+                if (Setting.DebugMode)
                     Logger.Warn($"Win32Exception: {e.ToString()}");
                 Logger.Warn("Can't get osu path, Retry after 2 seconds.");
                 Thread.Sleep(2000);
@@ -519,7 +536,7 @@ namespace OsuRTDataProvider.Listen
                         {
                             Variables.Username = line.Split('=')[1].Trim();
                         }
-                        else if (line.StartsWith("LastVersion")&&!line.StartsWith("LastVersionPermissionsFailed"))
+                        else if (line.StartsWith("LastVersion") && !line.StartsWith("LastVersionPermissionsFailed"))
                         {
                             Variables.OsuVersion = line.Split('=')[1].Trim();
                             Logger.Info($"OSU Client Verison:{Variables.OsuVersion} ORTDP Version:{Utils.GetVersion()}");
@@ -535,7 +552,7 @@ namespace OsuRTDataProvider.Listen
             if (string.IsNullOrWhiteSpace(Variables.SongsPath))
             {
                 Logger.Warn($"Search failed, use default songs path.");
-                Variables.SongsPath = Path.Combine(osu_path,"Songs");
+                Variables.SongsPath = Path.Combine(osu_path, "Songs");
             }
             Logger.Info($"Osu Path: {osu_path}");
             Logger.Info($"Beatmap Path: {Variables.SongsPath}");
@@ -739,7 +756,7 @@ namespace OsuRTDataProvider.Listen
                     m_last_playername = playername;
                 }
             }
-        }       
+        }
         private OsuStatus GetCurrentOsuStatus()
         {
             try
