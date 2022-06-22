@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
 
 namespace OsuRTDataProvider
 {
@@ -76,9 +77,31 @@ namespace OsuRTDataProvider
 
     public static class Logger
     {
-        public static void Info(string message) => Console.WriteLine(message);
-        public static void Debug(string message) => Console.WriteLine(message);
-        public static void Error(string message) => Console.Error.WriteLine(message);
-        public static void Warn(string message) => Console.WriteLine(message);
+        private static ILoggerFactory _loggerFactory;
+        public static void SetLoggerFactory(ILoggerFactory loggerFactory) => _loggerFactory = loggerFactory;
+
+        public static void Info(string message)
+        {
+            if (_loggerFactory is null) Console.WriteLine(message);
+            else _loggerFactory.CreateLogger("ORTDP").LogInformation(message);
+        }
+
+        public static void Debug(string message)
+        {
+            if (_loggerFactory is null) Console.WriteLine(message);
+            else _loggerFactory.CreateLogger("ORTDP").LogDebug(message);
+        }
+
+        public static void Error(string message)
+        {
+            if (_loggerFactory is null) Console.WriteLine(message);
+            else _loggerFactory.CreateLogger("ORTDP").LogError(message);
+        }
+
+        public static void Warn(string message)
+        {
+            if (_loggerFactory is null) Console.WriteLine(message);
+            else _loggerFactory.CreateLogger("ORTDP").LogWarning(message);
+        }
     }
 }
