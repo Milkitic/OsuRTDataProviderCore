@@ -33,6 +33,8 @@ namespace OsuRTDataProvider.Memory
 
         private IntPtr m_beatmap_address;
         private static byte[] s_beatmap_pattern_bytes;
+        private Beatmap _lastBeatmap;
+        private string _lastPath;
 
         public OsuBeatmapFinder(Process osu) : base(osu)
         {
@@ -79,10 +81,20 @@ namespace OsuRTDataProvider.Memory
                 {
                     string folder_full = Path.Combine(Variables.SongsPath, folder);
                     string filename_full = Path.Combine(folder_full, filename);
-                    using (var fs = File.OpenRead(filename_full))
+                    if (_lastPath != filename_full)
                     {
-                        beatmap = new Beatmap(osu_id, set_id, id, fs);
+                        using (var fs = File.OpenRead(filename_full))
+                        {
+                            beatmap = new Beatmap(osu_id, set_id, id, fs);
+                        }
                     }
+                    else
+                    {
+                        beatmap = _lastBeatmap;
+                    }
+
+                    _lastPath = filename_full;
+                    _lastBeatmap = beatmap;
                 }
             }
             catch (Exception e)
