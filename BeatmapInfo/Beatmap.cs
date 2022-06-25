@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using Coosu.Beatmap;
 using static OsuRTDataProvider.DefaultLanguage;
 
 namespace OsuRTDataProvider.BeatmapInfo
 {
     public class Beatmap
     {
-        public int BeatmapID { get; private set; }
-
         public string DownloadLink
         {
             get
@@ -36,6 +35,28 @@ namespace OsuRTDataProvider.BeatmapInfo
         /// Return set id.
         /// If no found return -1;
         /// </summary>
+
+        public string Version => _coosu == null ? "" : _coosu.Metadata.Version;
+        public string Difficulty => Version;
+        public string Creator => _coosu == null ? "" : _coosu.Metadata.Creator;
+        public string Artist => _coosu == null ? "" : _coosu.Metadata.Artist;
+        public string ArtistUnicode => _coosu == null ? "" : _coosu.Metadata.ArtistUnicode;
+        public string Title => _coosu == null ? "" : _coosu.Metadata.Title;
+        public string TitleUnicode => _coosu == null ? "" : _coosu.Metadata.TitleUnicode;
+        public string AudioFilename => _coosu == null ? "" : _coosu.General.AudioFilename;
+        public string BackgroundFilename => _coosu == null ? "" : _coosu.Events.BackgroundInfo?.Filename;
+        public string VideoFilename => _coosu == null ? "" : _coosu.Events.VideoInfo?.Filename;
+
+        public int OsuClientID { get; }
+
+        /// <summary>
+        /// Return the first of all possible beatmap set paths.
+        /// If not found.return string.Empty.
+        /// </summary>
+        public string Folder { get; } = string.Empty;
+        public string Filename { get; } = string.Empty;
+        public string FilenameFull { get; } = string.Empty;
+        public int BeatmapID { get; }
         public int BeatmapSetID
         {
             get
@@ -59,93 +80,45 @@ namespace OsuRTDataProvider.BeatmapInfo
             private set => m_beatmap_set_id = value;
         }
 
-        public string Version { get; private set; } = string.Empty;
-        public string Difficulty => Version;
-        public string Creator { get; private set; } = string.Empty;
-        public string Artist { get; private set; } = string.Empty;
-        public string ArtistUnicode { get; private set; } = string.Empty;
-        public string Title { get; private set; } = string.Empty;
-        public string TitleUnicode { get; private set; } = string.Empty;
-        public string AudioFilename { get; private set; } = string.Empty;
-        public string BackgroundFilename { get; private set; } = string.Empty;
-        public string VideoFilename { get; private set; } = string.Empty;
-
-        /// <summary>
-        /// Return the first of all possible beatmap set paths.
-        /// If not found.return string.Empty.
-        /// </summary>
-        public string Folder { get; private set; } = string.Empty;
-
-        public int OsuClientID { get; private set; }
-        public string Filename { get; private set; } = string.Empty;
-        public string FilenameFull { get; private set; } = string.Empty;
 
         private static readonly Beatmap s_empty = new Beatmap(0, -1, -1, null);
+        private static readonly Action<OsuReadOptions> ReadOptions = k =>
+        {
+            k.ExcludeSection("Editor");
+            k.ExcludeSection("Difficulty");
+            k.ExcludeSection("TimingPoints");
+            k.ExcludeSection("Colours");
+            k.ExcludeSection("HitObjects");
+            k.IgnoreSample();
+            k.IgnoreStoryboard();
+        };
+
+        private readonly LocalOsuFile _coosu;
+
         public static Beatmap Empty => s_empty;
 
-        public Beatmap(int osu_id, int set_id, int id, FileStream fs)
+        public Beatmap(int osu_id, int set_id, int id, string filename)
         {
             BeatmapSetID = set_id;
             OsuClientID = osu_id;
             BeatmapID = id;
 
-            if (fs != null)
+            if (filename != null)
             {
-                Folder = Path.GetDirectoryName(fs.Name);
-                Filename = Path.GetFileName(fs.Name);
-                FilenameFull = fs.Name;
-
-                using (var sr = new StreamReader(fs))
-                {
-                    string block = "";
-
-                    while(!sr.EndOfStream)
-                    {
-                        string line = sr.ReadLine().Trim();
-                        if (line.StartsWith("[")&&line.EndsWith("]"))
-                        {
-                            block = line;
-                        }
-                        else if(block== "[General]"||block== "[Metadata]")
-                        {
-                            foreach(var prop in typeof(Beatmap).GetProperties())
-                            {
-                                if (line.StartsWith($"{prop.Name}:"))
-                                {
-                                    object val=GetPropertyValue(line);
-                                    if (prop.PropertyType == typeof(int))
-                                        val = int.Parse(val as string);
-                                    if (prop.PropertyType == typeof(double))
-                                        val = double.Parse(val as string);
-                                    prop.SetValue(this, val);
-                                }
-                            }
-                        }
-                        else if(block=="[Events]")
-                        {
-                            if(line.StartsWith("Video"))
-                            {
-                                var breaked=line.Split(',');
-                                VideoFilename = breaked[2].Replace("\"","").Trim();
-                            }
-                            else if(line.StartsWith("0,")&&string.IsNullOrEmpty(BackgroundFilename))
-                            {
-                                var breaked = line.Split(',');
-                                BackgroundFilename = breaked[2].Replace("\"", "").Trim();
-                            }
-                        }
-                    }
-                }
+                Folder = Path.GetDirectoryName(filename);
+                Filename = Path.GetFileName(filename);
+                FilenameFull = filename;
+                _coosu = OsuFile.ReadFromFile(filename, ReadOptions);
             }
         }
 
         public static bool operator ==(Beatmap a, Beatmap b)
         {
-            if(a is null && b is null)
+            if (a is null && b is null)
             {
                 return true;
             }
-            if(a is null && !(b is null)||
+            if (a is null && !(b is null) ||
               !(a is null) && b is null)
             {
                 return false;

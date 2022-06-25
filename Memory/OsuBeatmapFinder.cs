@@ -79,10 +79,7 @@ namespace OsuRTDataProvider.Memory
                 {
                     string folder_full = Path.Combine(Variables.SongsPath, folder);
                     string filename_full = Path.Combine(folder_full, filename);
-                    using (var fs = File.OpenRead(filename_full))
-                    {
-                        beatmap = new Beatmap(osu_id, set_id, id, fs);
-                    }
+                    beatmap = new Beatmap(osu_id, set_id, id, filename_full);
                 }
             }
             catch (Exception e)
