@@ -83,10 +83,7 @@ namespace OsuRTDataProvider.Memory
                     string filename_full = Path.Combine(folder_full, filename);
                     if (_lastPath != filename_full)
                     {
-                        using (var fs = File.OpenRead(filename_full))
-                        {
-                            beatmap = new Beatmap(osu_id, set_id, id, fs);
-                        }
+                        beatmap = new Beatmap(osu_id, set_id, id, filename_full);
                     }
                     else
                     {
