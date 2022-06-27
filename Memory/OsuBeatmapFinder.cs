@@ -10,7 +10,7 @@ namespace OsuRTDataProvider.Memory
 {
     internal class OsuBeatmapFinder : OsuFinderBase
     {
-        
+
         private static readonly string s_beatmap_pattern = "\x74\x24\x8B\x0D\x0\x0\x0\x0\x85\xC9\x74\x1A";
 
         private static readonly string s_beatmap_mask = "xxxx????xxxx";
@@ -42,7 +42,7 @@ namespace OsuRTDataProvider.Memory
             CurrentOffset.AddOffset(versionBeatmapOffset);
             Logger.Info($"applied offset for osu!version({Setting.CurrentOsuVersionValue.ToString(CultureInfo.InvariantCulture)}) : {versionBeatmapOffset}");
         }
-        
+
 
         public override bool TryInit()
         {
@@ -83,6 +83,7 @@ namespace OsuRTDataProvider.Memory
                     string filename_full = Path.Combine(folder_full, filename);
                     if (_lastPath != filename_full)
                     {
+                        _lastPath = filename_full;
                         beatmap = new Beatmap(osu_id, set_id, id, filename_full);
                     }
                     else
@@ -90,7 +91,6 @@ namespace OsuRTDataProvider.Memory
                         beatmap = _lastBeatmap;
                     }
 
-                    _lastPath = filename_full;
                     _lastBeatmap = beatmap;
                 }
             }
@@ -113,6 +113,7 @@ namespace OsuRTDataProvider.Memory
                 }
 
                 Logger.Warn(sb.ToString());
+                _lastBeatmap = Beatmap.Empty;
             }
 
             return beatmap;
