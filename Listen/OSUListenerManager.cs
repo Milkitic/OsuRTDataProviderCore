@@ -644,7 +644,7 @@ find_osu_filename:
                     ModsInfo mods = ModsInfo.Empty;
                     ErrorStatisticsResult error_statistics = ErrorStatisticsResult.Empty;
                     int cb = 0;
-                    int pt = 0;
+                    int? pt = default;
                     int n300 = 0;
                     int n100 = 0;
                     int n50 = 0;
@@ -730,8 +730,8 @@ find_osu_filename:
                         if (cb != m_last_combo)
                             OnComboChanged?.Invoke(cb);
 
-                        if (pt != m_playing_time)
-                            OnPlayingTimeChanged?.Invoke(pt);
+                        if (pt != null && pt != m_playing_time)
+                            OnPlayingTimeChanged?.Invoke(pt.Value);
                     }
                     catch (Exception e)
                     {
@@ -744,7 +744,7 @@ find_osu_filename:
                     m_last_acc = acc;
                     m_last_error_statistics = error_statistics;
                     m_last_combo = cb;
-                    m_playing_time = pt;
+                    if (pt != null) m_playing_time = pt.Value;
                     m_last_300 = n300;
                     m_last_100 = n100;
                     m_last_50 = n50;
