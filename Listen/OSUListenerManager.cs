@@ -8,7 +8,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Management;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
