@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using Microsoft.Extensions.Logging;
 
 namespace OsuRTDataProvider
 {
@@ -73,6 +72,19 @@ namespace OsuRTDataProvider
             _version = ver.InformationalVersion;
             return _version;
         }
+    }
+
+    public interface ILoggerFactory
+    {
+        ILogger CreateLogger(string ortdp);
+    }
+
+    public interface ILogger
+    {
+        void LogInformation(string message);
+        void LogDebug(string message);
+        void LogError(string message);
+        void LogWarning(string message);
     }
 
     public static class Logger
