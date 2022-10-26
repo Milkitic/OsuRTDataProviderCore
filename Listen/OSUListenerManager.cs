@@ -199,6 +199,7 @@ namespace OsuRTDataProvider.Listen
 
         #endregion last status
 
+        public string ProcessPath => m_osu_process?.HasExited == false ? m_osu_process.MainModule?.FileName : null;
         private readonly bool m_is_tourney = false;
         private readonly int m_osu_id = 0;
 
@@ -572,6 +573,7 @@ find_osu_filename:
                 m_hit_event_finder = null;
 
                 FindOsuProcess();
+                InitializePlayFinders();
             }
 
             //Waiting for osu to start
@@ -580,20 +582,7 @@ find_osu_filename:
                 //Wait for player to playing
                 if (status == OsuStatus.Playing)
                 {
-                    if (m_play_finder == null)
-                    {
-                        m_play_finder = InitFinder<OsuPlayFinder>(LANG_INIT_PLAY_FINDER_SUCCESS, LANG_INIT_PLAY_FINDER_FAILED);
-                    }
-
-                    if (Setting.GameMode == "Auto" && m_mode_finder == null)
-                    {
-                        m_mode_finder = InitFinder<OsuPlayModeFinder>(LANG_INIT_MODE_FINDER_SUCCESS, LANG_INIT_MODE_FINDER_FAILED);
-                    }
-
-                    if (m_hit_event_finder == null)
-                    {
-                        m_hit_event_finder = InitFinder<OsuHitEventFinder>(LANG_INIT_HIT_EVENT_SUCCESS, LANG_INIT_HIT_EVENT_FAIL);
-                    }
+                    InitializePlayFinders();
                 }
 
                 if (m_beatmap_finder == null)
@@ -637,9 +626,21 @@ find_osu_filename:
                     }
                 }
 
-                if (m_play_finder != null)
+                if (m_beatmap_finder != null)
                 {
                     Beatmap beatmap = Beatmap.Empty;
+                    if (OnBeatmapChanged != null) beatmap = m_beatmap_finder.GetCurrentBeatmap(m_osu_id);
+
+                    if (beatmap != Beatmap.Empty && beatmap != m_last_beatmap)
+                    {
+                        OnBeatmapChanged?.Invoke(beatmap);
+                    }
+
+                    m_last_beatmap = beatmap;
+                }
+
+                if (m_play_finder != null)
+                {
                     ModsInfo mods = ModsInfo.Empty;
                     ErrorStatisticsResult error_statistics = ErrorStatisticsResult.Empty;
                     int cb = 0;
@@ -658,15 +659,9 @@ find_osu_filename:
                     try
                     {
                         if (OnPlayingTimeChanged != null) pt = m_play_finder.GetPlayingTime();
-                        if (OnBeatmapChanged != null) beatmap = m_beatmap_finder.GetCurrentBeatmap(m_osu_id);
                         if (Setting.EnableModsChangedAtListening && status != OsuStatus.Playing)
                             if (OnModsChanged != null) mods = m_play_finder.GetCurrentModsAtListening();
-
-                        if (beatmap != Beatmap.Empty && beatmap != m_last_beatmap)
-                        {
-                            OnBeatmapChanged?.Invoke(beatmap);
-                        }
-
+                        
                         if (status == OsuStatus.Playing)
                         {
                             if (OnErrorStatisticsChanged != null) error_statistics = m_play_finder.GetUnstableRate();
@@ -737,7 +732,6 @@ find_osu_filename:
                         Logger.Error(e.ToString());
                     }
 
-                    m_last_beatmap = beatmap;
                     m_last_mods = mods;
                     m_last_hp = hp;
                     m_last_acc = acc;
@@ -756,6 +750,25 @@ find_osu_filename:
                 }
             }
         }
+
+        private void InitializePlayFinders()
+        {
+            if (m_play_finder == null)
+            {
+                m_play_finder = InitFinder<OsuPlayFinder>(LANG_INIT_PLAY_FINDER_SUCCESS, LANG_INIT_PLAY_FINDER_FAILED);
+            }
+
+            if (Setting.GameMode == "Auto" && m_mode_finder == null)
+            {
+                m_mode_finder = InitFinder<OsuPlayModeFinder>(LANG_INIT_MODE_FINDER_SUCCESS, LANG_INIT_MODE_FINDER_FAILED);
+            }
+
+            if (m_hit_event_finder == null)
+            {
+                m_hit_event_finder = InitFinder<OsuHitEventFinder>(LANG_INIT_HIT_EVENT_SUCCESS, LANG_INIT_HIT_EVENT_FAIL);
+            }
+        }
+
         private OsuStatus GetCurrentOsuStatus()
         {
             try
