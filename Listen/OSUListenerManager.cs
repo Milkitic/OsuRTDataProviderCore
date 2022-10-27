@@ -200,6 +200,8 @@ namespace OsuRTDataProvider.Listen
         #endregion last status
 
         public string ProcessPath => m_osu_process?.HasExited == false ? m_osu_process.MainModule?.FileName : null;
+        public bool IsPlayFindersEnabled { get; set; } = true;
+
         private readonly bool m_is_tourney = false;
         private readonly int m_osu_id = 0;
 
@@ -573,14 +575,17 @@ find_osu_filename:
                 m_hit_event_finder = null;
 
                 FindOsuProcess();
-                InitializePlayFinders();
+                if (m_osu_process != null && IsPlayFindersEnabled)
+                {
+                    InitializePlayFinders();
+                }
             }
 
             //Waiting for osu to start
             if (status != OsuStatus.NoFoundProcess && status != OsuStatus.Unkonwn)
             {
                 //Wait for player to playing
-                if (status == OsuStatus.Playing)
+                if (status == OsuStatus.Playing && IsPlayFindersEnabled)
                 {
                     InitializePlayFinders();
                 }
