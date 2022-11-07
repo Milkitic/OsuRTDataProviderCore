@@ -74,17 +74,38 @@ namespace OsuRTDataProvider
         }
     }
 
+    public enum LogLevel
+    {
+        Trace = 0,
+        Debug = 1,
+        Information = 2,
+        Warning = 3,
+        Error = 4,
+        Critical = 5,
+        None = 6,
+    }
+
     public interface ILoggerFactory
     {
-        ILogger CreateLogger(string ortdp);
+        ILogger CreateLogger(string name);
+        ILogger<T> CreateLogger<T>();
+    }
+
+    public interface ILogger<T> : ILogger
+    {
     }
 
     public interface ILogger
     {
+        void Log(LogLevel logLevel, string message);
         void LogInformation(string message);
         void LogDebug(string message);
         void LogError(string message);
         void LogWarning(string message);
+        void LogInformation(Exception exception, string message);
+        void LogDebug(Exception exception, string message);
+        void LogError(Exception exception, string message);
+        void LogWarning(Exception exception, string message);
     }
 
     public static class Logger
