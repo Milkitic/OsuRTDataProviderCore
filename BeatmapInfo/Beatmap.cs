@@ -166,11 +166,11 @@ namespace OsuRTDataProvider.BeatmapInfo
             var hashCode = -173464191;
             hashCode = hashCode * -1521134295 + BeatmapID.GetHashCode();
             hashCode = hashCode * -1521134295 + BeatmapSetID.GetHashCode();
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Difficulty);
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Creator);
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Artist);
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Title);
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Filename);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Difficulty ?? "");
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Creator ?? "");
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Artist ?? "");
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Title ?? "");
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Filename ?? "");
             return hashCode;
         }
     }
