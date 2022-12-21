@@ -580,6 +580,9 @@ find_osu_filename:
                     InitializePlayFinders();
                 }
             }
+            
+            if (status != m_last_osu_status)
+                OnStatusChanged?.Invoke(m_last_osu_status, status);
 
             //Waiting for osu to start
             if (status != OsuStatus.NoFoundProcess && status != OsuStatus.Unkonwn)
@@ -683,9 +686,6 @@ find_osu_filename:
                             if (OnScoreChanged != null) score = m_play_finder.GetCurrentScore();
                             if (OnPlayerChanged != null) playername = m_play_finder.GetCurrentPlayerName();
                         }
-
-                        if (status != m_last_osu_status)
-                            OnStatusChanged?.Invoke(m_last_osu_status, status);
 
                         if (mods != ModsInfo.Empty && !ModsInfo.VaildMods(mods))
                             mods = m_last_mods;
