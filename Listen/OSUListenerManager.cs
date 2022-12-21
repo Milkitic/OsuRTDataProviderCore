@@ -110,7 +110,7 @@ namespace OsuRTDataProvider.Listen
         /// <summary>
         /// Available in Playing and Listen.
         /// </summary>
-        public event OnPlayingTimeChangedEvt OnPlayingTimeChanged;
+        public event OnPlayingTimeChangedEvt OnPlayingTimeUpdated;
 
         /// <summary>
         /// Available in Playing.
@@ -356,7 +356,7 @@ namespace OsuRTDataProvider.Listen
 
             if (HasMask(mask, ProvideDataMask.Time))
             {
-                if (OnPlayingTimeChanged == null) OnPlayingTimeChanged += (t) => { };
+                if (OnPlayingTimeUpdated == null) OnPlayingTimeUpdated += (t) => { };
                 data.Time = m_playing_time;
             }
 
@@ -621,7 +621,7 @@ find_osu_filename:
                 if (OnHitEventsChanged != null && m_hit_event_finder != null)
                 {
                     // Hit events should work with playing time
-                    if (OnPlayingTimeChanged == null) OnPlayingTimeChanged += (t) => { };
+                    if (OnPlayingTimeUpdated == null) OnPlayingTimeUpdated += (t) => { };
 
                     bool hasChanged;
                     m_hit_event_finder.GetHitEvents(status, m_playing_time, out m_play_type, out m_hit_events, out hasChanged);
@@ -663,7 +663,7 @@ find_osu_filename:
 
                     try
                     {
-                        if (OnPlayingTimeChanged != null) pt = m_play_finder.GetPlayingTime();
+                        if (OnPlayingTimeUpdated != null) pt = m_play_finder.GetPlayingTime();
                         if (Setting.EnableModsChangedAtListening && status != OsuStatus.Playing)
                             if (OnModsChanged != null) mods = m_play_finder.GetCurrentModsAtListening();
                         
@@ -729,8 +729,8 @@ find_osu_filename:
                         if (cb != m_last_combo)
                             OnComboChanged?.Invoke(cb);
 
-                        if (pt != null && pt != m_playing_time)
-                            OnPlayingTimeChanged?.Invoke(pt.Value);
+                        if (pt != null /*&& pt != m_playing_time*/)
+                            OnPlayingTimeUpdated?.Invoke(pt.Value);
                     }
                     catch (Exception e)
                     {
