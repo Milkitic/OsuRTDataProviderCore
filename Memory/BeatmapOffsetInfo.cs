@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Dynamic;
 using System.Linq;
 using System.Reflection;
 
@@ -32,11 +31,11 @@ namespace OsuRTDataProvider.Memory
             BeatmapSetAddressOffset += beatmapOffsetInfo.BeatmapSetAddressOffset;
             BeatmapFileNameAddressOffset += beatmapOffsetInfo.BeatmapFileNameAddressOffset;
         }
-        
+
         public void SetOffset(BeatmapOffsetInfo beatmapOffsetInfo)
         {
             BeatmapAddressOffset = beatmapOffsetInfo.BeatmapAddressOffset;
-            BeatmapFolderAddressOffset =  beatmapOffsetInfo.BeatmapFolderAddressOffset;
+            BeatmapFolderAddressOffset = beatmapOffsetInfo.BeatmapFolderAddressOffset;
             BeatmapSetAddressOffset = beatmapOffsetInfo.BeatmapSetAddressOffset;
             BeatmapFileNameAddressOffset = beatmapOffsetInfo.BeatmapFileNameAddressOffset;
         }
@@ -66,7 +65,7 @@ namespace OsuRTDataProvider.Memory
                 propertyForVersions.Add(attr, method);
             }
             propertyForVersions = propertyForVersions.OrderByDescending(item => item.Key.OsuVersion).
-                ToDictionary(item => item.Key,item => item.Value);
+                ToDictionary(item => item.Key, item => item.Value);
 
             bool versionMatched = false;
             foreach (var compareInfo in propertyForVersions)
@@ -74,7 +73,7 @@ namespace OsuRTDataProvider.Memory
                 double comparedVersion = compareInfo.Key.OsuVersion;
                 switch (compareInfo.Key.CompareCondition)
                 {
-                    case CompareCondition.Older: 
+                    case CompareCondition.Older:
                         versionMatched = comparedVersion < version;
                         break;
                     case CompareCondition.OlderOrEquals:
@@ -97,9 +96,9 @@ namespace OsuRTDataProvider.Memory
                     return (BeatmapOffsetInfo)compareInfo.Value.GetValue(null);
                 }
             }
-            
 
-            return new BeatmapOffsetInfo {Version = version};
+
+            return new BeatmapOffsetInfo { Version = version };
         }
 
         [OsuVersionCompareInfo(20190816, CompareCondition.Older)]

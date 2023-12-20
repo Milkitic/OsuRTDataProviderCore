@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Coosu.Beatmap" Version="2.3.30" />
+    <PackageReference Include="Coosu.Beatmap" Version="2.3.36" />
   </ItemGroup>
 
 </Project>
